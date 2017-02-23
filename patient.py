@@ -1,7 +1,7 @@
 import sys
 from PyQt4 import QtGui
-from PyQt4.QtCore import *
 from PyQt4 import QtCore
+from PyQt4.QtCore import QThread,SIGNAL
 import time
 
 
@@ -76,6 +76,7 @@ class Patient(QThread):
         self.next_states.append("Place Chest Tube")
         self.connect(self.parent, SIGNAL("Place Chest Tube"), self.Chest_tube_placed)
         self.new_thread = No_chest_tube_300s_timer()
+        self.connect(self.new_thread, SIGNAL("No_chest_tube_placed_300s()"), self.No_chest_tube_300s)
         # the timer permission gives the right for the timer to change the state, if 0 then the timer is not allowed to change the patient state
         self.timer_permission = 1
         self.new_thread.start()
@@ -92,7 +93,7 @@ class Patient(QThread):
         self.new_thread = No_chest_tube_300s_timer()
         self.connect(self.new_thread, SIGNAL("No_chest_tube_placed_300s()"), self.No_chest_tube_300s)
         self.new_thread.start()
-        self.next_states.clear()
+        self.next_states=[]
         self.next_states.append("Place Chest Tube")
         self.connect(self.parent,SIGNAL("Place Chest Tube"),self.Chest_tube_placed)
         self.On_state_changed()
@@ -118,13 +119,13 @@ class Patient(QThread):
         self.states[2] = 20
         self.states[3] = 40
         self.states[4] = 82
-        self.states[5] = "NRB"
+        self.states[5] = "NRB/No Chest Tube placed for 300s"
         self.new_thread = No_chest_tube_placed_180s_timer(self)
         self.new_thread.start()
         self.connect(self.new_thread, SIGNAL("No_chest_tube_placed"), self.No_chest_tube_placed)
         self.connect(self.parent, SIGNAL("Chest_tube_placed"), self.Chest_tube_placed)
         self.next_states=[]
-        self.next_states.append("Chest Tube Placed")
+        self.next_states.append("place chest tube")
         self.On_state_changed()
 
     def No_chest_tube_placed(self):
@@ -135,22 +136,21 @@ class Patient(QThread):
             self.states[2] = 0
             self.states[3] = 0
             self.states[4] = 0
-            self.states[5] = "None"
+            self.states[5] = "No_chest_tube_placed/Died"
             self.On_state_changed()
 
 
-class No_chest_tube_placed_180s_timer(QThread):
+class No_chest_tube_placed_180s_timer(QtCore.QThread):
     def __initial__(self, parent):
         super(No_chest_tube_placed_180s_timer, self).__init__()
-        self.new_signal=QtCore.SIGNAL("No_chest_tube_placed_180s")
 
     def run(self):
-        print("in thread\n")
+        print("in thread for 180 timer\n")
         start = time.time()
         a = 0
-        while (time.time() - start < 1.8):
+        while (time.time() - start < 3.6):
             a = a + 1
-        self.emit(self.new_signal)
+        self.emit(QtCore.SIGNAL("No_chest_tube_placed"))
 
 
 
@@ -158,14 +158,14 @@ class No_chest_tube_placed_180s_timer(QThread):
 class No_chest_tube_300s_timer(QtCore.QThread):
     def __init__(self):
         super(No_chest_tube_300s_timer, self).__init__()
-        self.new_signal=QtCore.SIGNAL("No_chest_tube_placed_300s")
     def run(self):
-        print("in thread\n")
+        print("in thread for 300 timer\n")
         start=time.time()
         a=0
-        while(time.time()-start<3.0):
+        while(time.time()-start<6.0):
             a=a+1
-        self.emit(self.new_signal)
+        print("timer stopped\n")
+        self.emit(QtCore.SIGNAL("No_chest_tube_placed_300s()"))
 
 
 

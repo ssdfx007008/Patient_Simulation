@@ -1,7 +1,8 @@
 import sys
 from PyQt4 import  QtGui
-from PyQt4.QtCore import *
 from PyQt4 import QtCore
+from PyQt4.QtCore import QThread,SIGNAL
+
 from patient import Patient
 
 class GSW(QtGui.QWidget):
